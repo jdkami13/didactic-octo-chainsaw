@@ -11,17 +11,22 @@ requires touching the rest of the code.
 # Find it by opening the company's careers page and checking the URL, or by
 # viewing the page's network requests for a call to boards-api.greenhouse.io.
 #
-# NOTE: this sandboxed environment could not reach external APIs to verify
-# these tokens. "peloton" is Peloton's real Greenhouse token. The rest are
-# best-guess placeholders -- verify each one before relying on it. A wrong
-# token just returns an empty result (see sources/greenhouse.py), it won't
-# crash the script.
+# These four tokens were confirmed via web search against live Greenhouse
+# posting URLs (e.g. job-boards.greenhouse.io/<token>/jobs/<id>):
+#   - peloton     -> job-boards.greenhouse.io/peloton/jobs/7535817
+#   - bark        -> job-boards.greenhouse.io/bark/jobs/7957591
+#   - littlespoon -> job-boards.greenhouse.io/littlespoon
+#   - changeorg58 -> job-boards.greenhouse.io/changeorg58/jobs/6538649003
+#     (NOTE: Change.org's token is "changeorg58", not the more obvious
+#     "changeorg" -- that guess was wrong in an earlier version of this file.)
+# A wrong/stale token just returns an empty result for that company (see
+# sources/greenhouse.py), it won't crash the script -- but these four are
+# confirmed real, not guesses.
 GREENHOUSE_COMPANIES = {
     "Peloton": "peloton",
     "BARK": "bark",
-    "Change.org": "changeorg",
+    "Change.org": "changeorg58",
     "Little Spoon": "littlespoon",
-    "PuppySpot": "puppyspot",
 }
 
 # --- Lever companies -------------------------------------------------------
@@ -37,6 +42,13 @@ LEVER_COMPANIES = {
 ASHBY_COMPANIES = {
     # "Example Co": "examplecom",
 }
+
+# PuppySpot: could NOT confirm Greenhouse, Lever, or Ashby for this company.
+# Their public job board appears to run on a service called Consider
+# (consider.com/boards/co/puppyspot), which this script does not integrate
+# with. Left out of all three dicts above rather than guessing a token that
+# would silently return nothing. If you find their actual ATS, add them to
+# the matching dict.
 
 # --- Adzuna aggregator search ----------------------------------------------
 ADZUNA_COUNTRY = "us"

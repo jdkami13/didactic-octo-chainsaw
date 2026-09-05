@@ -38,16 +38,20 @@ Edit `job_search_bot/config.py`:
   (`https://boards.greenhouse.io/<token>`, `https://jobs.lever.co/<slug>`,
   `https://jobs.ashbyhq.com/<name>`), or open browser dev tools → Network
   tab and look for the API request while the careers page loads.
-- **I pre-filled a starter list for BARK, Little Spoon, PuppySpot,
-  Change.org, and Peloton under Greenhouse, but this sandboxed environment
-  has no outbound internet access, so I could not verify these tokens
-  against the live APIs.** `peloton` is Peloton's real Greenhouse token;
-  treat the rest as guesses to confirm yourself. A wrong token just returns
-  zero results for that company — it won't error out the whole run — so
-  it's safe to leave as-is while you verify, but check each company's
-  actual careers page and ATS (some of these companies may not use
-  Greenhouse at all, in which case move them to the Lever or Ashby dict
-  instead, or drop them if they use something else entirely).
+- **Verified via web search against live Greenhouse posting URLs:**
+  Peloton (`peloton`), BARK (`bark`), Little Spoon (`littlespoon`), and
+  Change.org (`changeorg58` — note this one is *not* the more obvious
+  `changeorg`, an earlier version of this file had that guess wrong).
+  These four are pre-filled in `GREENHOUSE_COMPANIES`.
+- **PuppySpot could not be confirmed on Greenhouse, Lever, or Ashby.**
+  Their public job board runs on a service called
+  [Consider](https://consider.com/boards/co/puppyspot), which this script
+  doesn't integrate with, so they're left out of `config.py` entirely
+  rather than guessing a token that would silently return nothing. If you
+  find their actual underlying ATS, add them to the matching dict.
+- Tokens can go stale if a company migrates ATS providers — a wrong/old
+  token just returns zero results for that company, it won't error out the
+  whole run, but it's worth spot-checking periodically.
 
 ### 2. Get an Adzuna API key (free)
 
