@@ -23,7 +23,13 @@ def matches_level(job: Job) -> bool:
 
 
 def matches_location(job: Job) -> bool:
-    location = f"{job.location_text} {job.description_text[:500]}"
+    # Only trust the structured location field, not the free-text
+    # description -- a description can mention "remote" or "New York" for
+    # reasons unrelated to where the job itself is actually based (a
+    # distributed team's HQ, a client site, "not eligible for remote", a
+    # benefits blurb, etc.), which was letting unrelated postings slip
+    # through.
+    location = job.location_text or ""
     if _contains_any(location, config.REMOTE_KEYWORDS):
         return True
     return _contains_any(location, config.NYC_KEYWORDS)

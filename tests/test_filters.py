@@ -63,6 +63,18 @@ def test_bronx_location_passes():
     assert passes_all_filters(job) is True
 
 
+def test_description_mentioning_remote_does_not_leak_into_location_match():
+    # Regression test: a real posting for a Michigan-based role slipped
+    # through because its description happened to mention "remote"
+    # somewhere, even though the actual location field was nowhere near
+    # NYC or remote-eligible. Only job.location_text should count.
+    job = make_job(
+        location_text="Cascade, Kent County, MI",
+        description_text="This role is not eligible for remote work; onsite in our Michigan office.",
+    )
+    assert passes_all_filters(job) is False
+
+
 def test_salary_below_floor_fails():
     job = make_job(salary_min=60_000, salary_max=75_000)
     assert passes_all_filters(job) is False
