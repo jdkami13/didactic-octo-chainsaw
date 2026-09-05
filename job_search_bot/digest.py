@@ -40,6 +40,12 @@ def build_digest_text(jobs: List[Job]) -> str:
         lines.append(f"  Posted: {_fmt_date(job)}")
         lines.append(f"  Link: {job.url}")
         lines.append(f"  Source: {job.source}")
+        lines.append("  Description:")
+        # Adzuna in particular blocks scraping its site directly, so this
+        # full text -- captured straight from the API response -- is the
+        # only place to get the actual posting content after the fact; the
+        # link alone is a dead end for that source.
+        lines.append(f"    {job.description_text or 'not provided'}")
         lines.append("")
 
     return "\n".join(lines)
