@@ -67,7 +67,24 @@ Edit `job_search_bot/config.py`:
    daily/hourly personal search script. If you skip this, the script just
    logs a warning and continues without the Adzuna results.
 
-### 3. Run it
+### 3. Email delivery (optional)
+
+If you'd rather get the digest in your inbox than check a file/console
+output, add three more values to `.env`:
+
+```
+SMTP_USER=you@gmail.com
+SMTP_PASSWORD=your_16_character_app_password
+EMAIL_TO=you@gmail.com
+```
+
+For Gmail, `SMTP_PASSWORD` must be an **app password**, not your normal
+Gmail password — generate one at
+https://myaccount.google.com/apppasswords (requires 2-Step Verification to
+already be turned on for your Google account). If you leave these three
+unset, the script just skips emailing and behaves as before.
+
+### 4. Run it
 
 ```bash
 python -m job_search_bot.main
@@ -83,7 +100,7 @@ python -m job_search_bot.main --no-cache   # show everything that matches filter
 python -m job_search_bot.main --quiet      # only write the file, don't print to console
 ```
 
-### 4. Run the tests
+### 5. Run the tests
 
 ```bash
 pip install -r requirements-dev.txt
@@ -95,7 +112,38 @@ filter logic and each source's response parsing.
 
 ## Running on a schedule
 
-### Cron (Linux/macOS)
+### GitHub Actions (recommended — no computer needs to stay on)
+
+A workflow is already set up at `.github/workflows/job-search.yml`. It runs
+every 6 hours automatically, entirely on GitHub's servers, and can also be
+triggered manually any time from the GitHub website or app (works fine from
+a phone/iPad browser — no terminal needed). To activate it:
+
+1. **Add your credentials as repo secrets**, so the workflow can use them
+   without them ever appearing in the code: on GitHub, go to your repo →
+   **Settings** → **Secrets and variables** → **Actions** → **New
+   repository secret**. Add each of these one at a time (name, then value):
+   - `ADZUNA_APP_ID`
+   - `ADZUNA_APP_KEY`
+   - `SMTP_USER` (your Gmail address)
+   - `SMTP_PASSWORD` (the Gmail **app password**, not your real password —
+     see the email delivery section above)
+   - `EMAIL_TO` (where the digest should be sent)
+2. **Trigger it once manually to test**: go to the **Actions** tab → click
+   "Job Search Digest" in the left sidebar → **Run workflow** button → **Run
+   workflow**. Wait a minute or two, then check that email arrived (and
+   check the workflow's log in the Actions tab if it didn't, for what went
+   wrong).
+3. From then on it just runs itself every 6 hours — nothing else to do.
+
+The workflow also commits an updated `seen_jobs.json` back to the repo
+after each run (that's how it remembers what you've already been shown
+between runs, since each run starts on a fresh GitHub-hosted machine with
+no memory of the last one) — that's the small "Update seen-jobs cache"
+commit you'll see appear in the repo's history periodically; it's expected
+and not something to worry about.
+
+### Cron (Linux/macOS) — alternative if you have a computer you leave on
 
 Edit your crontab:
 
@@ -129,11 +177,14 @@ different scheduler. Let me know if you'd like one written out.
 ## Project layout
 
 ```
+.github/workflows/
+  job-search.yml    # scheduled + manually-triggerable GitHub Actions run
 job_search_bot/
   config.py       # companies, keywords, filter thresholds — edit this
   models.py        # the normalized Job record
   filters.py        # keyword/level/location/salary/recency filters
   digest.py        # formats the text digest
+  mailer.py        # sends the digest by email (SMTP)
   seen_cache.py       # tracks which jobs you've already been shown
   sources/
     greenhouse.py

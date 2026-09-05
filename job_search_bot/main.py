@@ -10,6 +10,7 @@ Usage:
 """
 import argparse
 import logging
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,6 +20,7 @@ from dotenv import load_dotenv
 from . import config
 from .digest import build_digest_text
 from .filters import filter_jobs
+from .mailer import send_email
 from .seen_cache import load_seen, save_seen, split_new_and_seen
 from .sources import adzuna, ashby, greenhouse, lever
 
@@ -83,7 +85,42 @@ def run(use_cache: bool = True, quiet: bool = False) -> int:
         seen_keys.update(job.dedup_key() for job in matching_jobs)
         save_seen(config.SEEN_CACHE_PATH, seen_keys)
 
+    send_digest_email(new_jobs, digest_text)
+
     return 0
+
+
+def send_digest_email(new_jobs, digest_text: str) -> None:
+    smtp_user = os.environ.get("SMTP_USER", "").strip()
+    smtp_password = os.environ.get("SMTP_PASSWORD", "").strip()
+    email_to = os.environ.get("EMAIL_TO", "").strip()
+
+    if not (smtp_user and smtp_password and email_to):
+        logger.info(
+            "Email not configured (need SMTP_USER, SMTP_PASSWORD, EMAIL_TO) - skipping email delivery."
+        )
+        return
+
+    if not new_jobs and not config.ALWAYS_SEND_EMAIL:
+        logger.info("No new postings and ALWAYS_SEND_EMAIL is False - skipping email.")
+        return
+
+    subject = (
+        f"Job digest: {len(new_jobs)} new posting(s)"
+        if new_jobs
+        else "Job digest: no new postings"
+    )
+    sent = send_email(
+        subject=subject,
+        body=digest_text,
+        to_addr=email_to,
+        smtp_host=config.SMTP_HOST,
+        smtp_port=config.SMTP_PORT,
+        smtp_user=smtp_user,
+        smtp_password=smtp_password,
+    )
+    if sent:
+        logger.info("Digest emailed to %s", email_to)
 
 
 def main() -> int:

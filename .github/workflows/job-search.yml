@@ -1,0 +1,48 @@
+name: Job Search Digest
+
+on:
+  schedule:
+    # Every 6 hours. Cron is in UTC. Adjust as you like -- the script's own
+    # recency filter (config.MAX_POSTING_AGE_HOURS) keeps results fresh
+    # regardless of how often this runs.
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run job search
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python -m job_search_bot.main --quiet
+
+      - name: Persist seen-jobs cache
+        run: |
+          if [ -n "$(git status --porcelain seen_jobs.json 2>/dev/null)" ]; then
+            git config user.name "job-search-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add -f seen_jobs.json
+            git commit -m "Update seen-jobs cache [skip ci]"
+            git push
+          else
+            echo "No change to seen_jobs.json"
+          fi

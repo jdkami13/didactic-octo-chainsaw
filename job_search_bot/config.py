@@ -106,3 +106,14 @@ MAX_POSTING_AGE_HOURS = 48
 # --- Output / dedup -------------------------------------------------------
 OUTPUT_DIR = "digests"
 SEEN_CACHE_PATH = "seen_jobs.json"
+
+# --- Email delivery ------------------------------------------------------
+# Controlled via env vars (see .env.example): SMTP_USER, SMTP_PASSWORD,
+# EMAIL_TO. If any of those three are unset, main.py just skips emailing and
+# falls back to printing/saving the digest as before -- nothing breaks.
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+# If True, sends an email every run (even a "no new postings" one) so you
+# know the automation is still alive. Set to False to only get emailed when
+# there's actually something new to look at.
+ALWAYS_SEND_EMAIL = True
