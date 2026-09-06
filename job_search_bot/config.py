@@ -115,5 +115,7 @@ SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 # If True, sends an email every run (even a "no new postings" one) so you
 # know the automation is still alive. Set to False to only get emailed when
-# there's actually something new to look at.
-ALWAYS_SEND_EMAIL = True
+# there's actually something new to look at. Defaulting to False -- with
+# the workflow running daily, a guaranteed-empty email most days is just
+# noise.
+ALWAYS_SEND_EMAIL = False

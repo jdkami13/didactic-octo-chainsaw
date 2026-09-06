@@ -2,10 +2,11 @@ name: Job Search Digest
 
 on:
   schedule:
-    # Every 6 hours. Cron is in UTC. Adjust as you like -- the script's own
-    # recency filter (config.MAX_POSTING_AGE_HOURS) keeps results fresh
-    # regardless of how often this runs.
-    - cron: "0 */6 * * *"
+    # Once a day, ~8am US Eastern (drifts to ~7am during EST since cron is
+    # UTC and doesn't follow daylight saving). The script's own recency
+    # filter (config.MAX_POSTING_AGE_HOURS, default 48h) means a daily
+    # check comfortably never misses anything. Adjust to taste.
+    - cron: "0 12 * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -37,12 +38,17 @@ jobs:
 
       - name: Persist seen-jobs cache
         run: |
-          if [ -n "$(git status --porcelain seen_jobs.json 2>/dev/null)" ]; then
-            git config user.name "job-search-bot"
-            git config user.email "actions@users.noreply.github.com"
-            git add -f seen_jobs.json
+          git config user.name "job-search-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f seen_jobs.json
+          # seen_jobs.json is in .gitignore for local dev convenience, but
+          # that means `git status <path>` silently omits it here too
+          # (ignored files are excluded from status by default even when
+          # named explicitly) -- checking the *staged diff* after a forced
+          # add works regardless of the ignore rule.
+          if git diff --cached --quiet -- seen_jobs.json; then
+            echo "No change to seen_jobs.json"
+          else
             git commit -m "Update seen-jobs cache [skip ci]"
             git push
-          else
-            echo "No change to seen_jobs.json"
           fi
